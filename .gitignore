@@ -1,0 +1,6 @@
+app/build
+node_modules
+*.orig
+configuration.ini
+status.json
+output.json
