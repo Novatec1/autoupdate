@@ -1,5 +1,5 @@
 /**
- * import the defination functions here !
+ * Here all the Actions are defined. Each Action is associated to a command which can be used in status file
  */
 import {download} from './functions/download';
 import {gitupdate} from './functions/gitupdate';
