@@ -1,37 +1,47 @@
 import defination from './defination';
 import Common from './common';
 import log from './log';
-import { callbackify } from 'util';
-import { request } from 'https';
-import { resolve } from 'url';
-const _common  = new Common();
 
-type status= {
-    "command_name": string,
-    "version":string,
-    time:string,
-    command: string,
-    argument: Array<any>
-}
-export class Hanlder implements routes {
-    public data: Array<status>;
+const _common  = new Common();
+import {args,config} from './runner';
+
+/**
+ * Handler();
+ * Responsible for executing each command provided in the status file
+ * @param data Aarray<config> expects the configuration file
+ * @param blobService Object expects the blobservice objects for blob service API.
+ */
+export class Handler implements routes {
+    public data: Array<config>;
     public blobService:any;
     
-    constructor(data:Array<status>,blobService:any){
+    constructor(data:Array<config>,blobService:any){
         this.data = data;
         this.blobService= blobService;
     }
+    /**
+     * Map();
+     * check if command is mapped to any function or not. if mapped returns the function
+     * @param command {String} command_name 
+     * @param argument {Array<args>} list of arguments for the command. args pattern defined in runner.ts
+     * 
+     */
     Map(command:string,argument:Array<any>){
         if (defination[command]) {
             return defination[command];
         }
         return null;
     };
+    /**
+     * Execute();
+     * Execute each command defined in the file
+     * @param callback executes once all commands executed
+     */
      Execute(callback:any){
             let output=[];
             this.data.forEach((element,index) => {
                 let operation = this.Map(element.command,element.argument);
-                if(this.validate(element,operation)){
+                if(this._validate(element,operation)){
                     const OPR = new operation(this.blobService);
                     OPR.run(element.argument,function(result){
                         if(result){
@@ -51,7 +61,12 @@ export class Hanlder implements routes {
                 }
             });
     }
-    validate(element:any,operation:any) : boolean{
+    /**
+     * 
+     * @param element each command passed in the status 
+     * @param operation operation to perform on the command
+     */
+    _validate(element:any,operation:any) : boolean{
         //Check if timestamp expired
         let date = new Date(parseInt(element.time));
         if (!_common.isValidDate(date) || (new Date()).getTime() < date.getTime()){
@@ -71,6 +86,8 @@ export class Hanlder implements routes {
     }
 
 }
+
+
 interface routes {
 
     Map(string,Array);

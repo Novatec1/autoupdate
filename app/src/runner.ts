@@ -3,7 +3,7 @@ export interface Runner {
 
 }
 /**
- * define the required fields for the status file
+ * define the required fields for the status arguments
  */
 export type args = {
     sourceFileName:string,
@@ -11,4 +11,15 @@ export type args = {
     destinationPath:string,
     otherCommands:Array<string>,
     containerName:String
+}
+
+/**
+ * export status file pattern
+ */
+export type config = {
+        "command_name": string,
+        "version":string,
+        time:string,
+        command: string,
+        argument: Array<args>
 }

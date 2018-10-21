@@ -1,9 +1,14 @@
+/**
+ * Read the configuration
+ * check for the environment variable
+ * Download the status file and trigger the event
+ */
 import * as  fs from 'fs';
 const ini = require('ini');
 import log from './log';
 import * as path from 'path';
 import { rejects } from 'assert';
-import {Hanlder} from './handler';
+import {Handler} from './handler';
 import { callbackify } from 'util';
 //get the config file path
 const config_path = process.argv[2] || "../configuration.ini";
@@ -27,6 +32,7 @@ const  storage = require('azure-storage');
 
 const blobService = storage.createBlobService();
 
+//Download the status file and check if status is valid
 blobService.getBlobToStream(config.blob.containername, config.blob.status_file, fs.createWriteStream('output.json'), function(error, result, response) {
     if (error) {
         log.error("encounterd an error while fetching status file",error);
@@ -36,7 +42,8 @@ blobService.getBlobToStream(config.blob.containername, config.blob.status_file, 
         let temp = fs.readFileSync('output.json',"utf8");
         try {
             let STATUS = JSON.parse(temp.toString());
-            let handle = new Hanlder(STATUS,blobService);
+            //Call the handler and request for execution
+            let handle = new Handler(STATUS,blobService);
             handle.Execute((result)=>{
                 console.log(result);
             })
@@ -47,4 +54,3 @@ blobService.getBlobToStream(config.blob.containername, config.blob.status_file, 
     }
 });
 
-//download the status file
