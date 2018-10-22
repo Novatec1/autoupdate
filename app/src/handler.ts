@@ -2,8 +2,7 @@ import defination from './defination';
 import Common from './common';
 import log from './log';
 
-const _common  = new Common();
-import {args,config} from './runner';
+import { args, config } from './runner';
 
 /**
  * Handler();
@@ -14,10 +13,17 @@ import {args,config} from './runner';
 export class Handler implements routes {
     public data: Array<config>;
     public blobService:any;
-    
-    constructor(data:Array<config>,blobService:any){
+    public _common:Common;
+    public config:any;
+    public config_path:string
+
+    constructor(data:Array<config>,blobService:any,config_path:string){
         this.data = data;
         this.blobService= blobService;
+        this._common = new Common();
+        this.config_path = config_path;
+        this.config = this._common.getIni(config_path);
+        
     }
     /**
      * Map();
@@ -41,7 +47,8 @@ export class Handler implements routes {
             let output=[];
             this.data.forEach((element,index) => {
                 let operation = this.Map(element.command,element.argument);
-                if(this._validate(element,operation)){
+                let status = this._validate(element,operation);
+                if(status){
                     const OPR = new operation(this.blobService);
                     OPR.run(element.argument,function(result){
                         if(result){
@@ -57,6 +64,8 @@ export class Handler implements routes {
                     console.log("failed to validate")
                 }
                 if(this.data.length -1 <=index){
+                    //store the update configuration (mostly versions) back into the ini file
+                    this._common.setIni(this.config,this.config_path);
                     callback(output);
                 }
             });
@@ -69,14 +78,18 @@ export class Handler implements routes {
     _validate(element:any,operation:any) : boolean{
         //Check if timestamp expired
         let date = new Date(parseInt(element.time));
-        if (!_common.isValidDate(date) || (new Date()).getTime() < date.getTime()){
+        if (!this._common.isValidDate(date) || (new Date()).getTime() < date.getTime()){
             console.log("failed to validate date");
             return false;
         }
         //check if version is greater than current version
-        process.env[element.command_name] = process.env[element.command_name] || element.version;
-        if(process.env[element.command_name] > element.version){
+        this.config.environment[element.command_name] = this.config.environment[element.command_name] || element.version; //inital case
+        if(this.config.environment[element.command_name].trim() >= element.version.trim()){
             return false;
+        }
+        else{
+            //version is greater, update the config variable
+            this.config.environment[element.command_name] = element.version;
         }
         //check if command exist
         if(operation == null){
