@@ -12,7 +12,7 @@ export class download implements Runner {
     }
     run(arg:args,callback:any){
         
-        this.blobService.getBlobToStream(arg.containerName,arg.sourceFileName, fs.createWriteStream(arg.destinationPath+arg.destinationFileName),function (error, result, response) {
+        this.blobService.getBlobToStream(arg.containerName,arg.sourceFileName, fs.createWriteStream(arg.destinationPath+arg.destinationFileName,{'flags': 'w'}),function (error, result, response) {
             if (error) {
                 log.error("encounterd an error while fetching status file",error);
                 return false;
